@@ -252,21 +252,89 @@ Skip this only when the verdict came from the Fastpath (archived / abandoned / j
 
 ### Steps
 
-1. Author the complete HTML yourself - there is no template to fill. Write a single self-contained `.html` file with all styling inline.
+1. Author the complete HTML yourself, but **reproduce the fixed design below** - the standard stylesheet verbatim and the standard structure - so every report looks the same. There is no separate template file; the design lives in this section.
 2. Write it to `~/Downloads/repo-vetter-<owner>-<repo>-<YYYY-MM-DD>.html` (lowercase; replace any `/` in the repo name with `-`). For multiple repos, write one combined report named `repo-vetter-comparison-<YYYY-MM-DD>.html` and add the head-to-head as an extra section.
 3. Verify: confirm the file exists, starts with `<!DOCTYPE html>`, parses as HTML, and contains the repo name and verdict. Then print the clickable path to the user.
 
-### What the report must contain
+### Required structure
 
-Cover every section of the audit, in this order: header with the repo name and a verdict badge; What it is; What it does; Signals; Security (risk rating + findings); Pros and Cons; Alternatives; Who it's for; Who it's not for; the Verdict with its justification; and a footer with the generated date, the repo URL, and a note that the repo was audited from metadata only (not cloned or executed).
+`<head>`: `<meta charset>`, viewport meta, `<title>owner/repo - Audit</title>`, then the standard stylesheet below pasted verbatim.
 
-### Look and feel
+`<body>` in this order:
 
-- Dark theme throughout. A good default palette: near-black background (`#0b0e14`), slightly lighter cards/surfaces (`#12161f`), subtle borders (`#262c39`), light text (`#e6edf3`), muted secondary text (`#97a0b0`), blue accent (`#58a6ff`).
-- Color-code the verdict badge: **Yes** green (`#3fb950`), **Maybe / Not yet** amber (`#d29922`), **No** red (`#f85149`).
-- Color-code security findings by severity: critical/high in red/orange (`#f85149` / `#ff7b72`), medium amber (`#d29922`), low blue (`#58a6ff`).
-- Use a system font stack, a centered readable column (~900px max width), summary/stat cards for Signals, and a two-column Pros/Cons layout that collapses to one column on narrow screens.
-- Aim for a clean engineering artifact, not marketing. You may vary the exact layout run to run - these are guidelines, not a fixed template.
+- `<header>` with `<h1><span class="mono">owner/repo</span> - Audit</h1>`, then `<p class="sub">one-line category &middot; <a href="URL">github.com/owner/repo</a> &middot; audited YYYY-MM-DD</p>`, then a `<div class="verdict-banner">` holding `<span class="tag">VERDICT</span>` and `<span class="txt">one-sentence justification</span>`. Add `yes` or `no` to the banner class for green / red; leave it plain for amber (Maybe / Not yet). Wrap the header content in `<div class="wrap">`.
+- Everything else inside a single `<div class="wrap">`, each section a numbered `<h2><span class="num">01</span>What it is</h2>` (renumber to match the sections you actually produce):
+  - **What it is** - `<p>` paragraphs; use `<p class="note">` for caveats / reality-checks.
+  - **What it does** - `<ul>`.
+  - **Signals** - `<table class="kv">` of label/value rows; mark values with `.good` / `.warn` / `.bad` and add `<span class="note">` asides.
+  - **Pros** - `<ul class="pros">` (renders `+` markers).
+  - **Cons** - `<ul class="cons">` (renders `-` markers).
+  - **Security audit** - a `<div class="card">` containing `Risk rating: <span class="risk medium">MEDIUM</span>` (class `low` / `medium` / `high` / `critical`), then `<h3>` sub-sections (Supply chain, Network egress, Secret handling, Known vulnerabilities, Maintainer trust, and the agent-tool / MCP addendum when relevant), closing with a `<div class="bottomline">`.
+  - **Alternatives** - `<ul>` with `<strong>name</strong> - why`.
+  - **Who it's valuable for** and **Who it's NOT for** - `<ul>`.
+  - **Should you install it?** - `<p>` paragraphs stating the verdict and the condition that flips it.
+  - Close with `<div class="footer">repo-vetter audit &middot; YYYY-MM-DD &middot; based on metadata, README, structure, and raw file reads. No clone, no install, no execution.</div>`.
+
+Use `<code>` for identifiers (versions, filenames, flags) and `<strong>` for emphasis.
+
+### Standard stylesheet (paste verbatim into `<head>`)
+
+```html
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --border:#30363d;
+    --fg:#e6edf3; --muted:#9aa7b4; --accent:#58a6ff; --accent2:#a371f7;
+    --green:#3fb950; --yellow:#d29922; --orange:#db8f3a; --red:#f85149;
+    --chip:#21262d;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:0 0 80px}
+  .wrap{max-width:900px;margin:0 auto;padding:0 24px}
+  header{padding:40px 24px 28px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#12182269,transparent)}
+  header .wrap{padding:0}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.5px}
+  h1 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--accent)}
+  .sub{color:var(--muted);font-size:14px;margin:0}
+  .sub a{color:var(--accent);text-decoration:none}
+  .verdict-banner{margin:22px 0 0;padding:16px 20px;border-radius:10px;border:1px solid var(--yellow);background:#221b0e;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .verdict-banner.yes{border-color:var(--green);background:#0f1f13}
+  .verdict-banner.no{border-color:var(--red);background:#241011}
+  .verdict-banner .tag{font-weight:700;font-size:13px;letter-spacing:.5px;text-transform:uppercase;padding:6px 12px;border-radius:999px;background:var(--yellow);color:#1a1205;white-space:nowrap}
+  .verdict-banner.yes .tag{background:var(--green);color:#04220c}
+  .verdict-banner.no .tag{background:var(--red);color:#2a0806}
+  .verdict-banner .txt{color:#e8dcc0;font-size:14.5px}
+  .verdict-banner.yes .txt{color:#cfe9d6}
+  .verdict-banner.no .txt{color:#f2d2d0}
+  h2{font-size:20px;margin:38px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border);letter-spacing:-.3px}
+  h2 .num{color:var(--accent2);font-family:ui-monospace,monospace;font-size:15px;margin-right:8px}
+  h3{font-size:15px;margin:22px 0 8px;color:var(--fg)}
+  p{margin:10px 0}
+  ul{margin:10px 0;padding-left:22px}
+  li{margin:6px 0}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;background:var(--chip);padding:2px 6px;border-radius:5px;color:#d2c7ff}
+  strong{color:#fff}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14.5px}
+  th,td{border:1px solid var(--border);padding:9px 12px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--muted);font-weight:600}
+  tr:nth-child(even) td{background:#12161d}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px 22px 18px;margin:14px 0}
+  .risk{display:inline-block;font-weight:700;padding:4px 12px;border-radius:6px;font-size:13px;letter-spacing:.5px}
+  .risk.low{background:#0f2318;color:var(--green);border:1px solid var(--green)}
+  .risk.medium{background:#3a2a0c;color:var(--orange);border:1px solid var(--orange)}
+  .risk.high{background:#3a1410;color:var(--red);border:1px solid var(--red)}
+  .risk.critical{background:#4a1210;color:#ff6a60;border:1px solid var(--red)}
+  .pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;background:var(--chip);color:var(--muted);margin:0 4px 4px 0;border:1px solid var(--border)}
+  .good{color:var(--green)} .warn{color:var(--yellow)} .bad{color:var(--red)}
+  .pros li::marker{content:"+ ";color:var(--green);font-weight:700}
+  .cons li::marker{content:"- ";color:var(--red);font-weight:700}
+  .bottomline{margin-top:16px;padding:14px 18px;border-left:3px solid var(--accent);background:#0e1626;border-radius:0 8px 8px 0;font-size:14.5px}
+  .footer{color:var(--muted);font-size:12.5px;text-align:center;margin-top:50px;border-top:1px solid var(--border);padding-top:20px}
+  .kv td:first-child{color:var(--muted);width:190px;white-space:nowrap}
+  .note{font-size:13.5px;color:var(--muted);font-style:italic}
+  a{color:var(--accent)}
+</style>
+```
 
 ### Safety (mandatory)
 
