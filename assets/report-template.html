@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{REPO_NAME}} - repo-vetter audit</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --surface: #12161f;
+    --surface-2: #171c27;
+    --border: #262c39;
+    --text: #e6edf3;
+    --muted: #97a0b0;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --amber: #d29922;
+    --red: #f85149;
+    --orange: #ff7b72;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+    font-size: 15px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 40px 24px 64px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  h1 { font-size: 28px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  h2 { font-size: 18px; margin: 36px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  p { margin: 0 0 12px; }
+  .muted { color: var(--muted); }
+
+  header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .subtitle { color: var(--muted); font-size: 15px; margin-top: 6px; max-width: 640px; }
+  .meta { color: var(--muted); font-size: 13px; margin-top: 10px; }
+
+  .badge {
+    display: inline-block; padding: 8px 16px; border-radius: 999px;
+    font-weight: 700; font-size: 14px; white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .verdict-yes    { background: rgba(63,185,80,.14);  color: var(--green); border-color: rgba(63,185,80,.4); }
+  .verdict-maybe  { background: rgba(210,153,34,.14); color: var(--amber); border-color: rgba(210,153,34,.4); }
+  .verdict-notyet { background: rgba(210,153,34,.14); color: var(--amber); border-color: rgba(210,153,34,.4); }
+  .verdict-no     { background: rgba(248,81,73,.14);  color: var(--red);   border-color: rgba(248,81,73,.4); }
+  .badge.sev-low      { background: rgba(88,166,255,.14); color: var(--accent); border-color: rgba(88,166,255,.4); }
+  .badge.sev-medium   { background: rgba(210,153,34,.14); color: var(--amber);  border-color: rgba(210,153,34,.4); }
+  .badge.sev-high     { background: rgba(255,123,114,.16); color: var(--orange); border-color: rgba(255,123,114,.45); }
+  .badge.sev-critical { background: rgba(248,81,73,.14);  color: var(--red);    border-color: rgba(248,81,73,.4); }
+
+  .signals { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .signal { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .signal-label { display: block; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .signal-value { display: block; font-size: 18px; font-weight: 600; margin-top: 4px; }
+
+  .risk-line { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .risk-line .label { color: var(--muted); font-size: 14px; }
+
+  .finding { display: flex; gap: 12px; background: var(--surface); border: 1px solid var(--border);
+    border-left-width: 3px; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+  .finding .sev-dot { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; }
+  .finding-title { font-weight: 600; }
+  .finding-detail { color: var(--muted); font-size: 14px; margin-top: 2px; }
+  .sev-critical { border-left-color: var(--red); }
+  .sev-critical .sev-dot { background: var(--red); }
+  .sev-high { border-left-color: var(--orange); }
+  .sev-high .sev-dot { background: var(--orange); }
+  .sev-medium { border-left-color: var(--amber); }
+  .sev-medium .sev-dot { background: var(--amber); }
+  .sev-low { border-left-color: var(--accent); }
+  .sev-low .sev-dot { background: var(--accent); }
+
+  .sev-pill { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+
+  .proscons { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .col { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+  .col h3 { margin: 0 0 8px; font-size: 15px; }
+  .col.pros h3 { color: var(--green); }
+  .col.cons h3 { color: var(--orange); }
+  ul { margin: 0; padding-left: 18px; }
+  li { margin-bottom: 6px; }
+  ul.plain { list-style: none; padding-left: 0; }
+  ul.plain li { padding-left: 16px; position: relative; }
+  ul.plain li::before { content: "\2192"; position: absolute; left: 0; color: var(--muted); }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+  footer { margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; }
+
+  @media (max-width: 560px) {
+    .proscons { grid-template-columns: 1fr; }
+    header { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>{{REPO_NAME}}</h1>
+      <div class="subtitle">{{SUBTITLE}}</div>
+      <div class="meta">{{META_LINE}}</div>
+    </div>
+    <span class="badge {{VERDICT_CLASS}}">{{VERDICT_LABEL}}</span>
+  </header>
+
+  <h2>What it is</h2>
+  <div class="card">{{WHAT_IT_IS}}</div>
+
+  <h2>What it does</h2>
+  <ul>{{WHAT_IT_DOES}}</ul>
+
+  <h2>Signals</h2>
+  <div class="signals">{{SIGNALS}}</div>
+
+  <h2>Security</h2>
+  <div class="risk-line"><span class="label">Risk rating</span> <span class="badge {{RISK_CLASS}}">{{RISK_LABEL}}</span></div>
+  {{FINDINGS}}
+
+  <h2>Pros &amp; Cons</h2>
+  <div class="proscons">
+    <div class="col pros"><h3>Pros</h3><ul>{{PROS}}</ul></div>
+    <div class="col cons"><h3>Cons</h3><ul>{{CONS}}</ul></div>
+  </div>
+
+  <h2>Alternatives</h2>
+  <ul class="plain">{{ALTERNATIVES}}</ul>
+
+  <h2>Who it's for</h2>
+  <ul class="plain">{{WHO_FOR}}</ul>
+
+  <h2>Who it's not for</h2>
+  <ul class="plain">{{WHO_NOT}}</ul>
+
+  <h2>Verdict</h2>
+  <div class="card">{{VERDICT_DETAIL}}</div>
+
+  <footer>
+    Generated by repo-vetter on {{GENERATED_DATE}} - <a href="{{REPO_URL}}">{{REPO_URL}}</a><br>
+    Audited from metadata, README, structure, and raw file reads only. The repo was not cloned or executed.
+  </footer>
+
+</div>
+</body>
+</html>
