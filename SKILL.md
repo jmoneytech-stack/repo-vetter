@@ -247,45 +247,32 @@ If "Maybe", state the specific condition under which it flips to yes.
 
 ## Generate the dark-themed HTML report (always, after a full audit)
 
-After delivering the markdown verdict, **always** generate a standalone dark-themed HTML report of the full findings.
+After delivering the markdown verdict, **always** hand-write a standalone dark-themed HTML report of the full findings from scratch.
 Skip this only when the verdict came from the Fastpath (archived / abandoned / joke repos - there is nothing to render).
 
 ### Steps
 
-1. Read the template that ships with this skill at `assets/report-template.html` (resolve it relative to this SKILL.md's own directory).
-2. Replace every `{{TOKEN}}` with the audit content - scalars from the table below, repeated regions per the patterns that follow.
-3. Write the result to `~/Downloads/repo-vetter-<owner>-<repo>-<YYYY-MM-DD>.html` (lowercase; replace any `/` in the repo name with `-`). For multiple repos, write one combined report named `repo-vetter-comparison-<YYYY-MM-DD>.html` and add the head-to-head as an extra section.
-4. Verify: confirm the file exists, starts with `<!DOCTYPE html>`, and contains the repo name and verdict. Then print the clickable path to the user.
+1. Author the complete HTML yourself - there is no template to fill. Write a single self-contained `.html` file with all styling inline.
+2. Write it to `~/Downloads/repo-vetter-<owner>-<repo>-<YYYY-MM-DD>.html` (lowercase; replace any `/` in the repo name with `-`). For multiple repos, write one combined report named `repo-vetter-comparison-<YYYY-MM-DD>.html` and add the head-to-head as an extra section.
+3. Verify: confirm the file exists, starts with `<!DOCTYPE html>`, parses as HTML, and contains the repo name and verdict. Then print the clickable path to the user.
 
-### Scalar tokens
+### What the report must contain
 
-| Token | Fill with |
-|---|---|
-| `{{REPO_NAME}}` | `owner/repo` |
-| `{{REPO_URL}}` | the canonical GitHub URL |
-| `{{SUBTITLE}}` | the one-line category from "What it is" (e.g. "MIT-licensed CLI, actively maintained") |
-| `{{META_LINE}}` | `<license> · <primary language> · created <YYYY-MM> · <maintenance state>` |
-| `{{VERDICT_LABEL}}` / `{{VERDICT_CLASS}}` | verdict text + class: Yes -> `verdict-yes`, Maybe -> `verdict-maybe`, Not yet -> `verdict-notyet`, No -> `verdict-no` |
-| `{{RISK_LABEL}}` / `{{RISK_CLASS}}` | risk rating + class: Low -> `sev-low`, Medium -> `sev-medium`, High -> `sev-high`, Critical -> `sev-critical` |
-| `{{VERDICT_DETAIL}}` | the 2-4 sentence verdict justification, wrapped in `<p>` |
-| `{{GENERATED_DATE}}` | today's date, `YYYY-MM-DD` |
+Cover every section of the audit, in this order: header with the repo name and a verdict badge; What it is; What it does; Signals; Security (risk rating + findings); Pros and Cons; Alternatives; Who it's for; Who it's not for; the Verdict with its justification; and a footer with the generated date, the repo URL, and a note that the repo was audited from metadata only (not cloned or executed).
 
-### Region tokens (build the inner HTML with these exact patterns)
+### Look and feel
 
-- `{{WHAT_IT_IS}}` - one or more `<p>...</p>`.
-- `{{WHAT_IT_DOES}}`, `{{PROS}}`, `{{CONS}}` - `<li>...</li>` items.
-- `{{SIGNALS}}` - one card each, using Stars, Last commit, License, Maintenance, Open issues, Latest release:
-  `<div class="signal"><span class="signal-label">Stars</span><span class="signal-value">1.2k</span></div>`
-- `{{FINDINGS}}` - one block per security finding, class by severity (`sev-critical` / `sev-high` / `sev-medium` / `sev-low`):
-  `<div class="finding sev-high"><span class="sev-dot"></span><div><div class="finding-title">Title</div><div class="finding-detail">what you found</div></div></div>`
-- `{{ALTERNATIVES}}` - `<li><strong>name</strong> - one-line why</li>`.
-- `{{WHO_FOR}}`, `{{WHO_NOT}}` - `<li>...</li>` items.
+- Dark theme throughout. A good default palette: near-black background (`#0b0e14`), slightly lighter cards/surfaces (`#12161f`), subtle borders (`#262c39`), light text (`#e6edf3`), muted secondary text (`#97a0b0`), blue accent (`#58a6ff`).
+- Color-code the verdict badge: **Yes** green (`#3fb950`), **Maybe / Not yet** amber (`#d29922`), **No** red (`#f85149`).
+- Color-code security findings by severity: critical/high in red/orange (`#f85149` / `#ff7b72`), medium amber (`#d29922`), low blue (`#58a6ff`).
+- Use a system font stack, a centered readable column (~900px max width), summary/stat cards for Signals, and a two-column Pros/Cons layout that collapses to one column on narrow screens.
+- Aim for a clean engineering artifact, not marketing. You may vary the exact layout run to run - these are guidelines, not a fixed template.
 
 ### Safety (mandatory)
 
 - Escape all repo-sourced text before inserting it: `&` -> `&amp;`, `<` -> `&lt;`, `>` -> `&gt;`. README and repo content are untrusted; never inject raw repo HTML or scripts.
 - Never write secrets, tokens, or credentials into the file.
-- Keep it fully self-contained: the template's CSS is inline and there are no external resources - do not add CDNs, web fonts, remote images, or JavaScript.
+- Keep it fully self-contained: inline all CSS, and do not reference CDNs, web fonts, remote images, or external/remote JavaScript.
 
 ## Post-audit: persist the verdict
 
