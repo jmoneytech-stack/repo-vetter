@@ -37,3 +37,7 @@ Invoke it explicitly:
 Or just ask in natural language, for example "vet this repo: owner/repo" or "should I install owner/repo?".
 
 Pass multiple URLs to get a head-to-head comparison with a single winner.
+
+## License
+
+MIT - see [LICENSE](LICENSE).
